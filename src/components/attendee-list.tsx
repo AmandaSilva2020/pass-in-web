@@ -23,21 +23,30 @@ interface Attendee {
 export function AttendeeList(){
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
     const [attendees, setAttendees] = useState<Attendee[]>([]);
 
-    const totalPages = Math.ceil(attendees.length / 10);
+    const totalPages = Math.ceil(total / 10);
 
     useEffect(()=>{
-        fetch('http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees')
+        const url = new URL('http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees');
+        url.searchParams.set('pageIndex', String(page -1));
+        
+        if(search.length > 0){
+            url.searchParams.set('query', search);
+        }
+
+        fetch(url)
         .then(response => response.json())
         .then(data => {
-            console.log(data);
             setAttendees(data.attendees);
+            setTotal(data.total);
         });
-    }, [page])
+    }, [page, search]);
 
     function onSearchInputChange(event: ChangeEvent<HTMLInputElement>){
-        setSearch(event.target.value)
+        setSearch(event.target.value);
+        setPage(1);
     }
 
     function goToNextPage(){
@@ -49,11 +58,11 @@ export function AttendeeList(){
     }
 
     function goToLastPage(){
-        setPage(totalPages)
+        setPage(totalPages);
     }
 
     function goToFirstPage(){
-        setPage(1)
+        setPage(1);
     }
 
     return (
@@ -113,7 +122,7 @@ export function AttendeeList(){
                 <tfoot>
                     <tr>
                         <TableCell colSpan={3}>
-                            Mostrando 10 de {attendees.length} itens
+                            Mostrando {attendees.length} de {total} itens
                         </TableCell>
                         <TableCell className="text-right" colSpan={3}>
                             <div className="inline-flex items-center gap-8">
